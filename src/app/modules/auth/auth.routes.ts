@@ -25,4 +25,10 @@ authRouter.post(
 // user routes
 userRouter.get('/me', UserControllers.getProfile);
 
+userRouter.put(
+  '/me',
+  validateDataByZod(authValidations.updateUserProfileValidationSchema),
+  UserControllers.updateUserProfile,
+);
+
 export const AuthRoutes = { authRouter, userRouter };

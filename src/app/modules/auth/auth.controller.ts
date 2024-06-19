@@ -45,13 +45,20 @@ const generateNewAccessToken = catchAsyncError(async (req, res) => {
 const getProfile = catchAsyncError(async (req, res) => {
   const token = req.headers.authorization;
   const result = await UserServices.getProfileFromDb(token as string);
-  successResponse(
-    res,
-    {
-      message: 'User profile retrieved successfully!',
-      data: result,
-    },
-  );
+  successResponse(res, {
+    message: 'User profile retrieved successfully!',
+    data: result,
+  });
+});
+
+const updateUserProfile = catchAsyncError(async (req, res) => {
+  const updateDoc = req.body;
+  const token = req.headers.authorization as string;
+  const result = await UserServices.updateUserProfileIntoDb(updateDoc, token);
+  successResponse(res, {
+    message: 'User profile updated successfully!',
+    data: result,
+  });
 });
 
 export const UserControllers = {
@@ -59,4 +66,5 @@ export const UserControllers = {
   loginUser,
   generateNewAccessToken,
   getProfile,
+  updateUserProfile,
 };

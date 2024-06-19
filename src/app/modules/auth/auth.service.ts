@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
 import { AppError } from '../../errors/AppError';
-import { TLoginUser, TUser } from './auth.interface';
+import { TLoginUser, TUpdateUser, TUser } from './auth.interface';
 import { UserModel } from './auth.model';
 import bcrypt from 'bcrypt';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -11,6 +11,8 @@ const createUserIntoDb = async (payload: TUser) => {
   const result = await UserModel.create(payload);
   return result;
 };
+
+// login user
 const loginUser = async (payload: TLoginUser) => {
   const isUserExist = await UserModel.findOne({ email: payload.email }).select(
     '+password',
@@ -85,6 +87,7 @@ const getProfileFromDb = async (token: string) => {
     token,
     config.jwt_access_secret as string,
   ) as JwtPayload;
+
   const user = await UserModel.findOne({ email, role });
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
@@ -92,9 +95,25 @@ const getProfileFromDb = async (token: string) => {
   return user;
 };
 
+// update user profile into db
+const updateUserProfileIntoDb = async (payload: TUpdateUser, token: string) => {
+  const { email, role } = jwt.verify(
+    token,
+    config.jwt_access_secret as string,
+  ) as JwtPayload;
+  // check if a user exist with the email
+  const isUserExist = await UserModel.findOne({ email, role });
+  if (!isUserExist) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+  }
+  const result = await UserModel.findOneAndUpdate({ email, role }, payload, {new: true}).select('-createdAt -updatedAt -__v');
+  return result;
+};
+
 export const UserServices = {
   createUserIntoDb,
   loginUser,
   generateNewAccessToken,
   getProfileFromDb,
+  updateUserProfileIntoDb,
 };
