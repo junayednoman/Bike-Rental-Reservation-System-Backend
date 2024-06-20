@@ -12,4 +12,12 @@ router.post(
   BikeControllers.createBike,
 );
 
+router.get('/', BikeControllers.getAllBikes);
+router.put(
+  '/:id',
+  authVerify(['admin']),
+  validateDataByZod(BikeValidation.updateBikeValidationSchema),
+  BikeControllers.updateBike,
+);
+
 export const BikeRoutes = { router };

@@ -22,7 +22,7 @@ export const authVerify = (allowedUsers: string[]) => {
       // check if user exist with the token credentials
       const isUserExist = await UserModel.findOne({ email, role });
       if (!isUserExist) {
-        throw new AppError(httpStatus.NOT_FOUND, 'No user found!');
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
       }
 
       // verify user role

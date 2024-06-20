@@ -5,7 +5,12 @@ import httpStatus from 'http-status';
 
 const bikeSchema = new Schema<TBike>(
   {
-    name: { type: String, required: [true, 'Name is required'], unique: true, trim: true },
+    name: {
+      type: String,
+      required: [true, 'name is required'],
+      unique: true,
+      trim: true,
+    },
     description: { type: String, required: [true, 'description is required'] },
     pricePerHour: { type: Number, required: [true, 'price is required'] },
     isAvailable: { type: Boolean, default: true },
@@ -25,6 +30,12 @@ bikeSchema.pre('save', async function () {
       'A bike is already exist with the name',
       'name',
     );
+  }
+});
+
+bikeSchema.post('find', async function (docs) {
+  if (docs.length === 0) {
+    throw new AppError(httpStatus.NOT_FOUND, 'No bike found!');
   }
 });
 

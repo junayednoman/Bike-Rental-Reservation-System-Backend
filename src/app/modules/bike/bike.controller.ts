@@ -13,4 +13,24 @@ const createBike = catchAsyncError(async (req, res) => {
   });
 });
 
-export const BikeControllers = { createBike };
+const getAllBikes = catchAsyncError(async (req, res) => {
+  const result = await BikeServices.getAllBikesFromDb();
+  successResponse(res, {
+    message: 'All bikes retrieved successfully',
+    data: result,
+  });
+});
+
+const updateBike = catchAsyncError(async (req, res) => {
+  const updateDoc = req.body;
+  const result = await BikeServices.updateBikeIntoDb(
+    updateDoc,
+    req?.params?.id,
+  );
+  successResponse(res, {
+    message: 'Bike updated successfully',
+    data: result,
+  });
+});
+
+export const BikeControllers = { createBike, getAllBikes, updateBike };
