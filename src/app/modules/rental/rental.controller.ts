@@ -19,4 +19,27 @@ const createRental = catchAsyncError(async (req, res) => {
   });
 });
 
-export const RentalControllers = { createRental };
+const returnBike = catchAsyncError(async (req, res) => {
+  const id = req?.params?.id;
+  const result = await RentalServices.returnBike(id);
+  successResponse(res, {
+    message: 'Bike returned successfully',
+    data: result,
+  });
+});
+
+const getAllRentals = catchAsyncError(async (req, res) => {
+  const token = req?.headers?.authorization as string;
+  const decoded = jwt.verify(
+    token,
+    config.jwt_access_secret as string,
+  ) as JwtPayload;
+
+  const result = await RentalServices.getAllRentalsFromDb(decoded);
+  successResponse(res, {
+    message: 'Rentals retrieved successfully',
+    data: result,
+  });
+});
+
+export const RentalControllers = { createRental, returnBike, getAllRentals };

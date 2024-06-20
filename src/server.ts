@@ -27,7 +27,7 @@ main();
 //   process.exit();
 // });
 
-process.on('uncaughtException', () => {
-  console.log(`😡 uncaughtException is detected, server shutting down...`);
-  process.exit();
-});
+// process.on('uncaughtException', () => {
+//   console.log(`😡 uncaughtException is detected, server shutting down...`);
+//   process.exit();
+// });
