@@ -19,5 +19,6 @@ router.put(
   validateDataByZod(BikeValidation.updateBikeValidationSchema),
   BikeControllers.updateBike,
 );
+router.delete('/:id', authVerify(['admin']), BikeControllers.deleteBike);
 
 export const BikeRoutes = { router };

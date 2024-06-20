@@ -33,4 +33,17 @@ const updateBike = catchAsyncError(async (req, res) => {
   });
 });
 
-export const BikeControllers = { createBike, getAllBikes, updateBike };
+const deleteBike = catchAsyncError(async (req, res) => {
+  const result = await BikeServices.deleteBikeFromDb(req?.params?.id);
+  successResponse(res, {
+    message: 'Bike deleted successfully',
+    data: result,
+  });
+});
+
+export const BikeControllers = {
+  createBike,
+  getAllBikes,
+  updateBike,
+  deleteBike,
+};

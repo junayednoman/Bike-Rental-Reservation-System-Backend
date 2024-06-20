@@ -22,6 +22,7 @@ const bikeSchema = new Schema<TBike>(
   { timestamps: true },
 );
 
+// check if bike already exist with the new given name
 bikeSchema.pre('save', async function () {
   const isBikeExist = await BikeModel.findOne({ name: this?.name });
   if (isBikeExist) {
@@ -33,6 +34,15 @@ bikeSchema.pre('save', async function () {
   }
 });
 
+// throw error if no bike exist with the id
+bikeSchema.pre('findOneAndDelete', async function () {
+  const isBikeExist = await BikeModel.findOne(this.getQuery());
+  if (!isBikeExist) {
+    throw new AppError(httpStatus.NOT_FOUND, 'No bike found with the id!', 'id');
+  }
+});
+
+// throw error if no bike is founded
 bikeSchema.post('find', async function (docs) {
   if (docs.length === 0) {
     throw new AppError(httpStatus.NOT_FOUND, 'No bike found!');
