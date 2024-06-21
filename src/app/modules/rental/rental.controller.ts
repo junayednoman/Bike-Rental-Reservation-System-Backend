@@ -1,5 +1,6 @@
 import config from '../../config';
 import catchAsyncError from '../../utils/catchAsyncError';
+import handleDataNotFound from '../../utils/dataNotFound';
 import successResponse from '../../utils/successResponse';
 import { RentalServices } from './rental.service';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -36,6 +37,7 @@ const getAllRentals = catchAsyncError(async (req, res) => {
   ) as JwtPayload;
 
   const result = await RentalServices.getAllRentalsFromDb(decoded);
+  handleDataNotFound(result, res);
   successResponse(res, {
     message: 'Rentals retrieved successfully',
     data: result,

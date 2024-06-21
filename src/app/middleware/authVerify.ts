@@ -27,7 +27,11 @@ export const authVerify = (allowedUsers: string[]) => {
 
       // verify user role
       if (allowedUsers && !allowedUsers.includes(role)) {
-        throw new AppError(httpStatus.FORBIDDEN, 'Forbidden!');
+        return res.status(401).json({
+          success: false,
+          statusCode: 401,
+          message: 'You have no access to this route',
+        });
       }
       next();
     } catch (error) {

@@ -1,6 +1,7 @@
 import { UserServices } from './auth.service';
 import successResponse from '../../utils/successResponse';
 import catchAsyncError from '../../utils/catchAsyncError';
+import handleDataNotFound from '../../utils/dataNotFound';
 
 const createUser = catchAsyncError(async (req, res) => {
   const userData = req.body;
@@ -55,6 +56,7 @@ const updateUserProfile = catchAsyncError(async (req, res) => {
   const updateDoc = req.body;
   const token = req.headers.authorization as string;
   const result = await UserServices.updateUserProfileIntoDb(updateDoc, token);
+  handleDataNotFound(result, res);
   successResponse(res, {
     message: 'Profile updated successfully!',
     data: result,

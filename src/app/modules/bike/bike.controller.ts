@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import catchAsyncError from '../../utils/catchAsyncError';
 import successResponse from '../../utils/successResponse';
 import { BikeServices } from './bike.service';
+import handleDataNotFound from '../../utils/dataNotFound';
 
 const createBike = catchAsyncError(async (req, res) => {
   const data = req.body;
@@ -15,6 +16,7 @@ const createBike = catchAsyncError(async (req, res) => {
 
 const getAllBikes = catchAsyncError(async (req, res) => {
   const result = await BikeServices.getAllBikesFromDb();
+ handleDataNotFound(result, res);
   successResponse(res, {
     message: 'All bikes retrieved successfully',
     data: result,

@@ -55,11 +55,5 @@ bikeSchema.pre('findOneAndDelete', async function () {
   }
 });
 
-// throw error if no bike is founded
-bikeSchema.post('find', async function (docs) {
-  if (docs.length === 0) {
-    throw new AppError(httpStatus.NOT_FOUND, 'No bike found!');
-  }
-});
 
 export const BikeModel = model<TBike>('bike', bikeSchema);

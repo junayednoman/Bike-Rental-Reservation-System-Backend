@@ -89,9 +89,6 @@ const getProfileFromDb = async (token: string) => {
   ) as JwtPayload;
 
   const user = await UserModel.findOne({ email, role });
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found!');
-  }
   return user;
 };
 

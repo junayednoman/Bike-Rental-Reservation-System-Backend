@@ -110,9 +110,6 @@ const getAllRentalsFromDb = async (decoded: JwtPayload) => {
   }
 
   const result = await RentalModel.find({ userId: user?._id });
-  if (result.length === 0) {
-    throw new AppError(httpStatus.NOT_FOUND, 'No rentals found for this user!');
-  }
   return result;
 };
 
