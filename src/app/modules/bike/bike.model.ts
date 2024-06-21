@@ -34,11 +34,24 @@ bikeSchema.pre('save', async function () {
   }
 });
 
+// check bike existence before updating
+bikeSchema.pre('findOneAndUpdate', async function () {
+  const query = this.getQuery();
+  const bike = await BikeModel.findOne(query);
+  if (!bike) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Invalid bike id!');
+  }
+});
+
 // throw error if no bike exist with the id
 bikeSchema.pre('findOneAndDelete', async function () {
   const isBikeExist = await BikeModel.findOne(this.getQuery());
   if (!isBikeExist) {
-    throw new AppError(httpStatus.NOT_FOUND, 'No bike found with the id!', 'id');
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      'No bike found with the id!',
+      'id',
+    );
   }
 });
 

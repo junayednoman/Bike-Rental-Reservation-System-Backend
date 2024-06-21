@@ -56,7 +56,7 @@ const updateUserProfile = catchAsyncError(async (req, res) => {
   const token = req.headers.authorization as string;
   const result = await UserServices.updateUserProfileIntoDb(updateDoc, token);
   successResponse(res, {
-    message: 'User profile updated successfully!',
+    message: 'Profile updated successfully!',
     data: result,
   });
 });

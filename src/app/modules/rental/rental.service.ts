@@ -13,11 +13,33 @@ const createRentalIntoDb = async (
   decodedInfo: JwtPayload,
 ) => {
   const { email, role } = decodedInfo;
-  const user = await UserModel.findOne({ email, role }).select('_id');
-  const userId = user?._id as Types.ObjectId;
-  payload.userId = userId;
-  const result = await RentalModel.create(payload);
-  return result;
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    const user = await UserModel.findOne({ email, role }).select('_id');
+    if (!user) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+    }
+    const userId = user._id as Types.ObjectId;
+    payload.userId = userId;
+
+    const result = await RentalModel.create([payload], { session });
+
+    await BikeModel.findOneAndUpdate(
+      { _id: payload.bikeId },
+      { isAvailable: false },
+      { new: true, session },
+    );
+
+    await session.commitTransaction();
+    return result;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(error.statusCode || httpStatus.BAD_REQUEST, error.message || 'Failed to create rental');
+  } finally {
+    session.endSession();
+  }
 };
 
 const returnBike = async (id: string) => {
@@ -70,12 +92,12 @@ const returnBike = async (id: string) => {
     );
 
     await session.commitTransaction();
-    await session.endSession();
     return result;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
+    throw new AppError(error.statusCode || httpStatus.BAD_REQUEST, error.message ||'Something went wrong!');
+  }finally{
     await session.endSession();
-    throw new AppError(httpStatus.BAD_REQUEST, 'Something went wrong!');
   }
 };
 

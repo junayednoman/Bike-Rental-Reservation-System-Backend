@@ -25,7 +25,7 @@ rentalSchema.pre('save', async function () {
   if (!isBikeExist.isAvailable) {
     throw new AppError(
       httpStatus.SERVICE_UNAVAILABLE,
-      'The bike is not available! Try again using different bikeId.',
+      'The bike is not available! Try again using different bike.',
     );
   }
 
@@ -34,12 +34,7 @@ rentalSchema.pre('save', async function () {
     throw new AppError(httpStatus.NOT_FOUND, 'Invalid user ID!', 'userId');
   }
 
-  // make the bike unavailable after booking
-  await BikeModel.findOneAndUpdate(
-    { _id: this.bikeId },
-    { isAvailable: false },
-    { new: true },
-  );
+  
 });
 
 export const RentalModel = model<TRental>('rental', rentalSchema);
