@@ -8,6 +8,6 @@ export const notFound = (req: Request, res: Response, next: NextFunction) => {
   return res.status(statusCode).json({
     success: false,
     statusCode: 404,
-    message: 'Not Found!',
+    message: 'Route Not Found!',
   });
 };

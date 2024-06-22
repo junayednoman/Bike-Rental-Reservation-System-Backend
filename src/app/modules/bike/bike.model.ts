@@ -49,7 +49,7 @@ bikeSchema.pre('findOneAndDelete', async function () {
   if (!isBikeExist) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      'No bike found with the id!',
+      'Invalid bike id!',
       'id',
     );
   }
