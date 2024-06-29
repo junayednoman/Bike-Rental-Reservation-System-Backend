@@ -109,7 +109,7 @@ const getAllRentalsFromDb = async (decoded: JwtPayload) => {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
   }
 
-  const result = await RentalModel.find({ userId: user?._id });
+  const result = await RentalModel.find({ userId: user?._id }).populate('userId').populate('bikeId');
   return result;
 };
 

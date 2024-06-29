@@ -1,4 +1,6 @@
+import httpStatus from 'http-status';
 import config from '../../config';
+import { AppError } from '../../errors/AppError';
 import catchAsyncError from '../../utils/catchAsyncError';
 import handleDataNotFound from '../../utils/dataNotFound';
 import successResponse from '../../utils/successResponse';
@@ -6,11 +8,18 @@ import { RentalServices } from './rental.service';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const createRental = catchAsyncError(async (req, res) => {
-  const token = req.headers.authorization as string;
+  const authHeader = req?.headers?.authorization as string;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+  }
+  const token = authHeader.split(' ')[1];
+
   const decoded = jwt.verify(
     token,
     config.jwt_access_secret as string,
   ) as JwtPayload;
+
   const rentalData = req.body;
   const result = await RentalServices.createRentalIntoDb(rentalData, decoded);
   successResponse(res, {
@@ -30,7 +39,13 @@ const returnBike = catchAsyncError(async (req, res) => {
 });
 
 const getAllRentals = catchAsyncError(async (req, res) => {
-  const token = req?.headers?.authorization as string;
+  const authHeader = req?.headers?.authorization as string;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+  }
+  const token = authHeader.split(' ')[1];
+
   const decoded = jwt.verify(
     token,
     config.jwt_access_secret as string,

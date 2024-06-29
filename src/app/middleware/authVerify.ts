@@ -8,18 +8,18 @@ import { UserModel } from '../modules/auth/auth.model';
 export const authVerify = (allowedUsers: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization;
-      if (!token) {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
       }
 
-      // verify token
-      const { email, role } = jwt.verify(
-        token,
-        config.jwt_access_secret as string,
-      ) as JwtPayload;
+      const token = authHeader.split(' ')[1];
 
-      // check if user exist with the token credentials
+      // verify token
+      const { email, role } = jwt.verify(token, config.jwt_access_secret as string) as JwtPayload;
+
+      // check if user exists with the token credentials
       const isUserExist = await UserModel.findOne({ email, role });
       if (!isUserExist) {
         throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
@@ -33,6 +33,7 @@ export const authVerify = (allowedUsers: string[]) => {
           message: 'You have no access to this route',
         });
       }
+
       next();
     } catch (error) {
       next(error);

@@ -6,8 +6,8 @@ import httpStatus from 'http-status';
 import { UserModel } from '../auth/auth.model';
 
 const rentalSchema = new Schema<TRental>({
-  userId: { type: Schema.Types.ObjectId },
-  bikeId: { type: Schema.Types.ObjectId, required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'user' },
+  bikeId: { type: Schema.Types.ObjectId, required: true, ref: 'bike' },
   startTime: { type: String, required: true },
   returnTime: { type: String, default: null },
   totalCost: { type: Number, default: 0 },
@@ -33,8 +33,6 @@ rentalSchema.pre('save', async function () {
   if (!isUserExist) {
     throw new AppError(httpStatus.NOT_FOUND, 'Invalid user ID!', 'userId');
   }
-
-  
 });
 
 export const RentalModel = model<TRental>('rental', rentalSchema);

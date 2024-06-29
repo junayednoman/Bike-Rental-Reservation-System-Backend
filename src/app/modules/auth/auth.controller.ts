@@ -2,6 +2,8 @@ import { UserServices } from './auth.service';
 import successResponse from '../../utils/successResponse';
 import catchAsyncError from '../../utils/catchAsyncError';
 import handleDataNotFound from '../../utils/dataNotFound';
+import { AppError } from '../../errors/AppError';
+import httpStatus from 'http-status';
 
 const createUser = catchAsyncError(async (req, res) => {
   const userData = req.body;
@@ -44,7 +46,13 @@ const generateNewAccessToken = catchAsyncError(async (req, res) => {
 });
 
 const getProfile = catchAsyncError(async (req, res) => {
-  const token = req.headers.authorization;
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+  }
+
+  const token = authHeader.split(' ')[1];
   const result = await UserServices.getProfileFromDb(token as string);
   successResponse(res, {
     message: 'User profile retrieved successfully!',
