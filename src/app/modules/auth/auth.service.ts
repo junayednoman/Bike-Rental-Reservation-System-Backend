@@ -9,7 +9,13 @@ import config from '../../config';
 // create service for creating user into db
 const createUserIntoDb = async (payload: TUser) => {
   const result = await UserModel.create(payload);
-  return result;
+  let user;
+  if (result) {
+    user = await UserModel.findOne({ email: payload.email }).select(
+      '-password -createdAt -updatedAt -__v',
+    );
+  }
+  return user;
 };
 
 // login user
@@ -54,7 +60,11 @@ const loginUser = async (payload: TLoginUser) => {
     },
   );
 
-  return { accessToken, refreshToken, isUserExist };
+  const user = await UserModel.findOne({ email: payload.email }).select(
+    '-createdAt -updatedAt -__v',
+  );
+
+  return { accessToken, refreshToken, user };
 };
 
 // generate new access token by refresh token
@@ -63,6 +73,7 @@ const generateNewAccessToken = async (refreshToken: string) => {
     refreshToken,
     config.jwt_refresh_secret as string,
   ) as JwtPayload;
+
   // check if a user exist with the email
   const isUserExist = await UserModel.findOne({ email, role });
   if (!isUserExist) {
@@ -88,7 +99,7 @@ const getProfileFromDb = async (token: string) => {
     config.jwt_access_secret as string,
   ) as JwtPayload;
 
-  const user = await UserModel.findOne({ email, role });
+  const user = await UserModel.findOne({ email, role }).select('-__v');
   return user;
 };
 
@@ -103,14 +114,50 @@ const updateUserProfileIntoDb = async (payload: TUpdateUser, token: string) => {
   if (!isUserExist) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
   }
-  const result = await UserModel.findOneAndUpdate({ email, role }, payload, {new: true}).select('-createdAt -updatedAt -__v');
+  const result = await UserModel.findOneAndUpdate({ email, role }, payload, {
+    new: true,
+  }).select('-createdAt -updatedAt -__v');
   return result;
 };
 
-export const UserServices = {
+// get all users
+const getAllUsersFromDb = async () => {
+  const user = await UserModel.find().select('-__v');
+  return user;
+};
+// delete user
+const deleteUserFromDb = async (id: string) => {
+  const user = await UserModel.findById(id);
+  if (!user) {
+    throw new AppError(404, 'Invalid user id');
+  }
+  const result = await UserModel.findByIdAndDelete(id);
+  return result;
+};
+
+// delete user
+const updateUserRole = async (id: string) => {
+  const user = await UserModel.findById(id);
+  if (!user) {
+    throw new AppError(404, 'Invalid user id');
+  }
+  let role;
+  if (user?.role === 'user') {
+    role = 'admin';
+  } else {
+    role = 'user';
+  }
+  const result = await UserModel.findByIdAndUpdate(id, { role });
+  return result;
+};
+
+export const AuthServices = {
   createUserIntoDb,
   loginUser,
   generateNewAccessToken,
   getProfileFromDb,
   updateUserProfileIntoDb,
+  getAllUsersFromDb,
+  deleteUserFromDb,
+  updateUserRole,
 };

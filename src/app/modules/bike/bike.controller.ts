@@ -8,17 +8,25 @@ const createBike = catchAsyncError(async (req, res) => {
   const data = req.body;
   const result = await BikeServices.createBikeIntoDb(data);
   successResponse(res, {
-    message: 'Bike created successfully',
+    message: 'Bike added successfully',
     status: httpStatus.CREATED,
     data: result,
   });
 });
 
 const getAllBikes = catchAsyncError(async (req, res) => {
-  const result = await BikeServices.getAllBikesFromDb();
- handleDataNotFound(result, res);
+  const result = await BikeServices.getAllBikesFromDb(req.query);
+  handleDataNotFound(result, res);
   successResponse(res, {
     message: 'All bikes retrieved successfully',
+    data: result,
+  });
+});
+
+const getSingleBike = catchAsyncError(async (req, res) => {
+  const result = await BikeServices.getSingleBikeFromDb(req?.params?.bikeId);
+  successResponse(res, {
+    message: 'Bike retrieved successfully',
     data: result,
   });
 });
@@ -46,6 +54,7 @@ const deleteBike = catchAsyncError(async (req, res) => {
 export const BikeControllers = {
   createBike,
   getAllBikes,
+  getSingleBike,
   updateBike,
   deleteBike,
 };

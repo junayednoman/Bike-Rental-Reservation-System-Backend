@@ -1,34 +1,42 @@
 import { Router } from 'express';
-import { UserControllers } from './auth.controller';
 import { authValidations } from './auth.validations';
 import { validateDataByZod } from '../../middleware/validateDataByZod';
+import { AuthController } from './auth.controller';
+import { authVerify } from '../../middleware/authVerify';
 
 const authRouter = Router();
 const userRouter = Router();
 authRouter.post(
   '/signup',
   validateDataByZod(authValidations.createUserValidationSchema),
-  UserControllers.createUser,
+  AuthController.createUser,
 );
 
 authRouter.post(
   '/login',
   validateDataByZod(authValidations.loginUserValidationSchema),
-  UserControllers.loginUser,
+  AuthController.loginUser,
 );
 
 authRouter.post(
   '/generate-access-token',
-  UserControllers.generateNewAccessToken,
+  AuthController.generateNewAccessToken,
 );
 
 // user routes
-userRouter.get('/me', UserControllers.getProfile);
+userRouter.get('/me', AuthController.getProfile);
 
 userRouter.put(
   '/me',
   validateDataByZod(authValidations.updateUserProfileValidationSchema),
-  UserControllers.updateUserProfile,
+  AuthController.updateUserProfile,
 );
+
+
+userRouter.get('/', authVerify(['admin']), AuthController.getAllUsers);
+
+userRouter.delete('/:id', authVerify(['admin']), AuthController.deleteUser);
+
+userRouter.put('/:id', authVerify(['admin']), AuthController.updateUserRole);
 
 export const AuthRoutes = { authRouter, userRouter };

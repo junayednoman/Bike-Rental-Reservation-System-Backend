@@ -1,16 +1,16 @@
-import { UserServices } from './auth.service';
 import successResponse from '../../utils/successResponse';
 import catchAsyncError from '../../utils/catchAsyncError';
 import handleDataNotFound from '../../utils/dataNotFound';
 import { AppError } from '../../errors/AppError';
 import httpStatus from 'http-status';
+import { AuthServices } from './auth.service';
 
 const createUser = catchAsyncError(async (req, res) => {
   const userData = req.body;
-  const result = await UserServices.createUserIntoDb(userData);
-  result.password = '';
+  const result = await AuthServices.createUserIntoDb(userData);
+
   successResponse(res, {
-    message: 'User registered successfully!',
+    message: 'User registered successfully',
     status: 201,
     data: result,
   });
@@ -18,15 +18,14 @@ const createUser = catchAsyncError(async (req, res) => {
 
 const loginUser = catchAsyncError(async (req, res) => {
   const userData = req.body;
-  const result = await UserServices.loginUser(userData);
-  const { accessToken, refreshToken, isUserExist } = result;
-  isUserExist.password = '';
+  const result = await AuthServices.loginUser(userData);
+  const { accessToken, refreshToken, user } = result;
   res.cookie('refreshToken', refreshToken);
   successResponse(
     res,
     {
-      message: 'User logged in successfully!',
-      data: isUserExist,
+      message: 'User logged in successfully',
+      data: user,
     },
     accessToken,
   );
@@ -34,7 +33,7 @@ const loginUser = catchAsyncError(async (req, res) => {
 
 const generateNewAccessToken = catchAsyncError(async (req, res) => {
   const { refreshToken } = req.cookies;
-  const result = await UserServices.generateNewAccessToken(refreshToken);
+  const result = await AuthServices.generateNewAccessToken(refreshToken);
   successResponse(
     res,
     {
@@ -53,7 +52,7 @@ const getProfile = catchAsyncError(async (req, res) => {
   }
 
   const token = authHeader.split(' ')[1];
-  const result = await UserServices.getProfileFromDb(token as string);
+  const result = await AuthServices.getProfileFromDb(token as string);
   successResponse(res, {
     message: 'User profile retrieved successfully!',
     data: result,
@@ -62,19 +61,53 @@ const getProfile = catchAsyncError(async (req, res) => {
 
 const updateUserProfile = catchAsyncError(async (req, res) => {
   const updateDoc = req.body;
-  const token = req.headers.authorization as string;
-  const result = await UserServices.updateUserProfileIntoDb(updateDoc, token);
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  const result = await AuthServices.updateUserProfileIntoDb(updateDoc, token);
   handleDataNotFound(result, res);
   successResponse(res, {
-    message: 'Profile updated successfully!',
+    message: 'Profile updated successfully',
     data: result,
   });
 });
 
-export const UserControllers = {
+const getAllUsers = catchAsyncError(async (req, res) => {
+  const result = await AuthServices.getAllUsersFromDb();
+  successResponse(res, {
+    message: 'Users retrieved successfully!',
+    data: result,
+  });
+});
+
+const deleteUser = catchAsyncError(async (req, res) => {
+  const result = await AuthServices.deleteUserFromDb(req.params.id);
+  successResponse(res, {
+    message: 'Users deleted successfully!',
+    data: result,
+  });
+});
+
+const updateUserRole = catchAsyncError(async (req, res) => {
+  const result = await AuthServices.updateUserRole(req.params.id);
+  successResponse(res, {
+    message: 'Users role updated successfully!',
+    data: result,
+  });
+});
+
+export const AuthController = {
   createUser,
   loginUser,
   generateNewAccessToken,
   getProfile,
   updateUserProfile,
+  getAllUsers,
+  deleteUser,
+  updateUserRole,
 };

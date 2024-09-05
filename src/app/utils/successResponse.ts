@@ -10,7 +10,7 @@ const successResponse = (
     success: true,
     statusCode: data.status || 200,
     message: data.message,
-    accessToken: token,
+    token,
     data: data.data,
   });
 };

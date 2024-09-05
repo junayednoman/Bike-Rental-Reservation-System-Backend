@@ -11,10 +11,14 @@ const bikeSchema = new Schema<TBike>(
       unique: true,
       trim: true,
     },
+    image: {
+      type: String,
+      required: [true, 'image is required'],
+    },
     description: { type: String, required: [true, 'description is required'] },
     pricePerHour: { type: Number, required: [true, 'price is required'] },
     isAvailable: { type: Boolean, default: true },
-    cc: { type: Number, required: [true, 'cc is required'] },
+    cc: { type: String, required: [true, 'cc is required'] },
     year: { type: Number, required: [true, 'year is required'] },
     model: { type: String, required: [true, 'model is required'] },
     brand: { type: String, required: [true, 'brand is required'] },
@@ -47,13 +51,8 @@ bikeSchema.pre('findOneAndUpdate', async function () {
 bikeSchema.pre('findOneAndDelete', async function () {
   const isBikeExist = await BikeModel.findOne(this.getQuery());
   if (!isBikeExist) {
-    throw new AppError(
-      httpStatus.NOT_FOUND,
-      'Invalid bike id!',
-      'id',
-    );
+    throw new AppError(httpStatus.NOT_FOUND, 'Invalid bike id!', 'id');
   }
 });
-
 
 export const BikeModel = model<TBike>('bike', bikeSchema);

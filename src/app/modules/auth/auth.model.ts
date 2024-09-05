@@ -14,7 +14,12 @@ const userSchema = new Schema<TUser>(
     password: { type: String, required: true, select: 0 },
     phone: { type: String, required: true },
     address: { type: String },
-    role: { type: String, enum: ['admin', 'user'], required: true },
+    role: {
+      type: String,
+      enum: ['admin', 'user'],
+      default: 'user',
+      required: true,
+    },
   },
   { timestamps: true },
 );

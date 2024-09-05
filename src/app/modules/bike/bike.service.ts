@@ -1,5 +1,8 @@
+import QueryBuilder from '../../builder/QueryBuilder';
 import { TBike } from './bike.interface';
 import { BikeModel } from './bike.model';
+
+export const BikeSearchableFields = ['name', 'brand', 'cc', 'price'];
 
 const createBikeIntoDb = async (payload: TBike) => {
   const result = await BikeModel.create(payload);
@@ -7,8 +10,27 @@ const createBikeIntoDb = async (payload: TBike) => {
 };
 
 // get bike from db
-const getAllBikesFromDb = async () => {
-  const result = await BikeModel.find().select('-createdAt -updatedAt -__v');
+const getAllBikesFromDb = async (query: Record<string, unknown>) => {
+  const bikeQuery = new QueryBuilder(
+    BikeModel.find().select('-createdAt -updatedAt -__v'),
+    query,
+  )
+    .search(BikeSearchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+  const result = await bikeQuery.modelQuery;
+  const meta = await bikeQuery.countTotal();
+
+  return {
+    meta,
+    result,
+  };
+};
+
+const getSingleBikeFromDb = async (id: string) => {
+  const result = await BikeModel.findById(id);
   return result;
 };
 
@@ -27,6 +49,7 @@ const deleteBikeFromDb = async (id: string) => {
 export const BikeServices = {
   createBikeIntoDb,
   getAllBikesFromDb,
+  getSingleBikeFromDb,
   updateBikeIntoDb,
-  deleteBikeFromDb
+  deleteBikeFromDb,
 };

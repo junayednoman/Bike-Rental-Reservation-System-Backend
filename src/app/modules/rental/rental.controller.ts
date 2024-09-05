@@ -39,19 +39,30 @@ const returnBike = catchAsyncError(async (req, res) => {
 });
 
 const getAllRentals = catchAsyncError(async (req, res) => {
-  const authHeader = req?.headers?.authorization as string;
+  const queryData = req?.query;
+  const { myRentals, ...query } = queryData;
+  let decoded;
+  if (myRentals) {
+    const authHeader = req?.headers?.authorization as string;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+    }
+    const token = authHeader.split(' ')[1];
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
+    const decodedInfo = jwt.verify(
+      token,
+      config.jwt_access_secret as string,
+    ) as JwtPayload;
+
+    decoded = decodedInfo;
   }
-  const token = authHeader.split(' ')[1];
+console.log(typeof myRentals);
 
-  const decoded = jwt.verify(
-    token,
-    config.jwt_access_secret as string,
-  ) as JwtPayload;
-
-  const result = await RentalServices.getAllRentalsFromDb(decoded);
+  const result = await RentalServices.getAllRentalsFromDb(
+    decoded as JwtPayload,
+    query,
+    myRentals
+  );
   handleDataNotFound(result, res);
   successResponse(res, {
     message: 'Rentals retrieved successfully',
