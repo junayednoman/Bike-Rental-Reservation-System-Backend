@@ -7,8 +7,8 @@ import mongoose, { Types } from 'mongoose';
 import { BikeModel } from '../bike/bike.model';
 import httpStatus from 'http-status';
 import { AppError } from '../../errors/AppError';
-import initiatePayment from '../payment/payment.utils';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { initiatePayment } from '../payment/payment.utils';
 
 export const BikeSearchableFields = ['name', 'brand', 'cc', 'price'];
 
@@ -16,7 +16,14 @@ const createRentalIntoDb = async (
   payload: TRental,
   decodedInfo: JwtPayload,
 ) => {
-  initiatePayment();
+  const paymentInit = await initiatePayment();
+  if (!paymentInit?.url) {
+    throw new AppError(
+      httpStatus.BAD_GATEWAY,
+      'Something went wrong with payment!',
+    );
+  }
+
   const { email, role } = decodedInfo;
   const session = await mongoose.startSession();
   try {
@@ -28,17 +35,13 @@ const createRentalIntoDb = async (
     }
     const userId = user._id as Types.ObjectId;
     payload.userId = userId;
+    payload.isAdvancePaid = false;
+    payload.advanceTransactionId = paymentInit?.transactionId;
 
     const result = await RentalModel.create([payload], { session });
 
-    // await BikeModel.findOneAndUpdate(
-    //   { _id: payload.bikeId },
-    //   { isAvailable: false },
-    //   { new: true, session },
-    // );
-
     await session.commitTransaction();
-    return result;
+    return { result, paymentInitUrl: paymentInit?.url };
   } catch (error: any) {
     await session.abortTransaction();
     throw new AppError(
@@ -48,6 +51,23 @@ const createRentalIntoDb = async (
   } finally {
     session.endSession();
   }
+};
+
+const makeAdvancePaymentSuccess = async (transactionId: string) => {
+  const result = await RentalModel.findOneAndUpdate(
+    {
+      advanceTransactionId: transactionId,
+    },
+    { isAdvancePaid: true },
+  );
+  return result;
+};
+
+const makeAdvancePaymentFail = async (transactionId: string) => {
+  const result = await RentalModel.findOneAndDelete({
+    advanceTransactionId: transactionId,
+  });
+  return result;
 };
 
 const returnBike = async (id: string) => {
@@ -151,4 +171,6 @@ export const RentalServices = {
   createRentalIntoDb,
   returnBike,
   getAllRentalsFromDb,
+  makeAdvancePaymentSuccess,
+  makeAdvancePaymentFail,
 };

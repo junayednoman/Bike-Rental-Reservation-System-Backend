@@ -14,5 +14,13 @@ router.post(
 
 router.put('/:id/return', authVerify(['admin']), RentalControllers.returnBike);
 router.get('/', RentalControllers.getAllRentals);
+router.post(
+  '/payment-success/:transactionId',
+  RentalControllers.advancePaymentSuccess,
+);
+router.post(
+  '/payment-fail/:transactionId',
+  RentalControllers.advancePaymentFail,
+);
 
 export const RentalRoutes = { router };

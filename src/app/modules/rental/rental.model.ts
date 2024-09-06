@@ -13,6 +13,9 @@ const rentalSchema = new Schema<TRental>({
   totalCost: { type: Number, default: 0 },
   isReturned: { type: Boolean, default: false },
   isPaid: { type: Boolean, default: false },
+  isAdvancePaid: { type: Boolean, default: false },
+  advanceTransactionId: { type: String },
+  transactionId: { type: String },
 });
 
 // check if user and bike exist with the given id

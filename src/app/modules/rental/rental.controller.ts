@@ -56,12 +56,11 @@ const getAllRentals = catchAsyncError(async (req, res) => {
 
     decoded = decodedInfo;
   }
-console.log(typeof myRentals);
 
   const result = await RentalServices.getAllRentalsFromDb(
     decoded as JwtPayload,
     query,
-    myRentals
+    myRentals as string,
   );
   handleDataNotFound(result, res);
   successResponse(res, {
@@ -70,4 +69,22 @@ console.log(typeof myRentals);
   });
 });
 
-export const RentalControllers = { createRental, returnBike, getAllRentals };
+const advancePaymentSuccess = catchAsyncError(async (req, res) => {
+  const transactionId = req?.params?.transactionId;
+  await RentalServices.makeAdvancePaymentSuccess(transactionId);
+  res.redirect(`http://localhost:5173/dashboard/user/my-rentals`);
+});
+
+const advancePaymentFail = catchAsyncError(async (req, res) => {
+  const transactionId = req?.params?.transactionId;
+  await RentalServices.makeAdvancePaymentFail(transactionId);
+  res.redirect(`http://localhost:5173/payment-failure`);
+});
+
+export const RentalControllers = {
+  createRental,
+  returnBike,
+  getAllRentals,
+  advancePaymentSuccess,
+  advancePaymentFail,
+};
