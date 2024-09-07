@@ -15,12 +15,20 @@ router.post(
 router.put('/:id/return', authVerify(['admin']), RentalControllers.returnBike);
 router.get('/', RentalControllers.getAllRentals);
 router.post(
-  '/payment-success/:transactionId',
+  '/advance-payment-success/:transactionId',
   RentalControllers.advancePaymentSuccess,
 );
 router.post(
-  '/payment-fail/:transactionId',
+  '/advance-payment-fail/:transactionId',
   RentalControllers.advancePaymentFail,
 );
+router.get('/:id', RentalControllers.getSingleRental);
+router.post('/:id', RentalControllers.makePayment);
+
+router.post(
+  '/payment-success/:rentalId/:transactionId',
+  RentalControllers.paymentSuccess,
+);
+router.post('/payment-fail/:transactionId', RentalControllers.paymentFail);
 
 export const RentalRoutes = { router };

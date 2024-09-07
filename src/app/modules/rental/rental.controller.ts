@@ -9,7 +9,6 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const createRental = catchAsyncError(async (req, res) => {
   const authHeader = req?.headers?.authorization as string;
-
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized!');
   }
@@ -20,8 +19,12 @@ const createRental = catchAsyncError(async (req, res) => {
     config.jwt_access_secret as string,
   ) as JwtPayload;
 
-  const rentalData = req.body;
-  const result = await RentalServices.createRentalIntoDb(rentalData, decoded);
+  const { rentalData, paymentInfo } = req.body;
+  const result = await RentalServices.createRentalIntoDb(
+    rentalData,
+    decoded,
+    paymentInfo,
+  );
   successResponse(res, {
     message: 'Rental created successfully',
     status: 201,
@@ -31,7 +34,9 @@ const createRental = catchAsyncError(async (req, res) => {
 
 const returnBike = catchAsyncError(async (req, res) => {
   const id = req?.params?.id;
-  const result = await RentalServices.returnBike(id);
+  const { rentalEndTime } = req.body;
+  console.log('body', req.body);
+  const result = await RentalServices.returnBike(id, rentalEndTime);
   successResponse(res, {
     message: 'Bike returned successfully',
     data: result,
@@ -72,12 +77,46 @@ const getAllRentals = catchAsyncError(async (req, res) => {
 const advancePaymentSuccess = catchAsyncError(async (req, res) => {
   const transactionId = req?.params?.transactionId;
   await RentalServices.makeAdvancePaymentSuccess(transactionId);
-  res.redirect(`http://localhost:5173/dashboard/user/my-rentals`);
+  res.redirect(
+    `http://localhost:5173/dashboard/user/my-rentals?booking=confirmed`,
+  );
 });
 
 const advancePaymentFail = catchAsyncError(async (req, res) => {
   const transactionId = req?.params?.transactionId;
   await RentalServices.makeAdvancePaymentFail(transactionId);
+  res.redirect(`http://localhost:5173/advance-payment-failure`);
+});
+
+const getSingleRental = catchAsyncError(async (req, res) => {
+  const id = req?.params?.id;
+  const result = await RentalServices.getSingleRentalFromDb(id);
+  successResponse(res, {
+    message: 'Rental retrieved successfully',
+    data: result,
+  });
+});
+
+const makePayment = catchAsyncError(async (req, res) => {
+  const id = req?.params?.id;
+  const paymentInfo = req.body;
+  const result = await RentalServices.makePayment(id, paymentInfo);
+  successResponse(res, {
+    message: result.message || 'Payment initiated successfully',
+    data: result,
+  });
+});
+
+const paymentSuccess = catchAsyncError(async (req, res) => {
+  const transactionId = req?.params?.transactionId;
+  const rentalId = req?.params?.rentalId;
+  await RentalServices.paymentSuccess(transactionId, rentalId);
+  res.redirect(`http://localhost:5173/payment-success/${transactionId}`);
+});
+
+const paymentFail = catchAsyncError(async (req, res) => {
+  const transactionId = req?.params?.transactionId;
+  await RentalServices.paymentFail(transactionId);
   res.redirect(`http://localhost:5173/payment-failure`);
 });
 
@@ -87,4 +126,8 @@ export const RentalControllers = {
   getAllRentals,
   advancePaymentSuccess,
   advancePaymentFail,
+  getSingleRental,
+  makePayment,
+  paymentSuccess,
+  paymentFail,
 };

@@ -8,6 +8,7 @@ import { BikeModel } from '../bike/bike.model';
 import httpStatus from 'http-status';
 import { AppError } from '../../errors/AppError';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { TPaymentInfo } from '../payment/payment.interface';
 import { initiatePayment } from '../payment/payment.utils';
 
 export const BikeSearchableFields = ['name', 'brand', 'cc', 'price'];
@@ -15,13 +16,13 @@ export const BikeSearchableFields = ['name', 'brand', 'cc', 'price'];
 const createRentalIntoDb = async (
   payload: TRental,
   decodedInfo: JwtPayload,
+  paymentInfo: TPaymentInfo,
 ) => {
-  const paymentInit = await initiatePayment();
+  paymentInfo.success_url = `http://localhost:5000/api/rentals/advance-payment-success`;
+  paymentInfo.fail_url = `http://localhost:5000/api/rentals/advance-payment-fail`;
+  const paymentInit = await initiatePayment(paymentInfo);
   if (!paymentInit?.url) {
-    throw new AppError(
-      httpStatus.BAD_GATEWAY,
-      'Something went wrong with payment!',
-    );
+    throw new AppError(httpStatus.BAD_GATEWAY, 'Payment initiation failed!');
   }
 
   const { email, role } = decodedInfo;
@@ -60,6 +61,15 @@ const makeAdvancePaymentSuccess = async (transactionId: string) => {
     },
     { isAdvancePaid: true },
   );
+
+  if (result) {
+    await BikeModel.findOneAndUpdate(
+      { _id: result?.bikeId },
+      {
+        isAvailable: false,
+      },
+    );
+  }
   return result;
 };
 
@@ -70,13 +80,10 @@ const makeAdvancePaymentFail = async (transactionId: string) => {
   return result;
 };
 
-const returnBike = async (id: string) => {
+const returnBike = async (id: string, rentalEndTime: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    // set return time
-    const currentTime = new Date();
-    const returnTime = currentTime.toISOString().split('.')[0] + 'Z';
 
     const rental = await RentalModel.findOne({ _id: id }).select(
       'startTime bikeId',
@@ -92,16 +99,27 @@ const returnBike = async (id: string) => {
       throw new AppError(httpStatus.NOT_FOUND, 'Invalid bike ID!', 'id');
     }
 
-    // calculate cost based on time
-    const startTime = new Date(rental?.startTime) as any;
-    const timeDifference = (new Date(returnTime) as any) - startTime;
-    const totalHours = timeDifference / (1000 * 60 * 60);
+    // calculate rental cost based on time
+    const startTime = new Date(`1970-01-01T${rental?.startTime}:00`);
+    const endTime = new Date(`1970-01-01T${rentalEndTime}:00`);
 
-    const totalCost = bike.pricePerHour * totalHours;
+    if (endTime <= startTime) {
+      {
+        throw new AppError(
+          httpStatus.CONFLICT,
+          'End time must be later than start time!',
+        );
+      }
+    }
+
+    const diffInMilliseconds = endTime.getTime() - startTime.getTime();
+    const rentalTimeInHours = diffInMilliseconds / (1000 * 60 * 60);
+    const totalCost = rentalTimeInHours * bike?.pricePerHour;
+
     const updateDoc = {
       isReturned: true,
-      returnTime,
-      totalCost: totalCost.toFixed(2),
+      returnTime: rentalEndTime,
+      totalCost: totalCost.toFixed(3),
     };
     const result = await RentalModel.findOneAndUpdate({ _id: id }, updateDoc, {
       new: true,
@@ -167,10 +185,77 @@ const getAllRentalsFromDb = async (
   };
 };
 
+const getSingleRentalFromDb = async (id: string) => {
+  const result = await RentalModel.findById(id)
+    .select('-createdAt -updatedAt -__v')
+    .populate('userId')
+    .populate('bikeId');
+  return result;
+};
+
+const makePayment = async (rentalId: string, paymentInfo: TPaymentInfo) => {
+  const rental = await RentalModel.findById(rentalId);
+
+  if (!rental) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid rental Id!');
+  }
+
+  // initiate payment
+  if (paymentInfo.total_amount < 100) {
+    const extraAmount = 100 - paymentInfo?.total_amount;
+    const result = await RentalModel.findByIdAndUpdate(rentalId, {
+      isPaid: true,
+    });
+    return {
+      result,
+      message: `Extra ৳${extraAmount} is refunded to your account. 😀`,
+    };
+  } else if (paymentInfo?.total_amount === 100) {
+    const result = await RentalModel.findByIdAndUpdate(rentalId, {
+      isPaid: true,
+    });
+    return {
+      result,
+      message: `Total cost and advance amount is equal! So, payment is done! 😀`,
+    };
+  } else {
+    paymentInfo.success_url = `http://localhost:5000/api/rentals/payment-success/${rentalId}`;
+    paymentInfo.fail_url = `http://localhost:5000/api/rentals/payment-fail`;
+    const paymentInit = await initiatePayment(paymentInfo);
+    if (!paymentInit?.url) {
+      throw new AppError(httpStatus.BAD_GATEWAY, 'Payment initiation failed!');
+    }
+
+    return { result: rental, paymentInitUrl: paymentInit?.url };
+  }
+};
+
+const paymentSuccess = async (transactionId: string, rentalId: string) => {
+  const result = await RentalModel.findByIdAndUpdate(rentalId, {
+    isPaid: true,
+    transactionId,
+  });
+  return result;
+};
+
+const paymentFail = async (transactionId: string) => {
+  const result = await RentalModel.findOneAndUpdate(
+    {
+      transactionId,
+    },
+    { isPaid: false, transactionId: null },
+  );
+  return result;
+};
+
 export const RentalServices = {
   createRentalIntoDb,
   returnBike,
   getAllRentalsFromDb,
   makeAdvancePaymentSuccess,
   makeAdvancePaymentFail,
+  getSingleRentalFromDb,
+  makePayment,
+  paymentSuccess,
+  paymentFail,
 };
