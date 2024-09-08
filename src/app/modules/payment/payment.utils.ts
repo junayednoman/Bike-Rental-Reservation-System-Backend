@@ -18,9 +18,9 @@ function generateObjectId() {
   return timestamp + randomBytes;
 }
 
-const transactionId = generateObjectId();
 
 export const initiatePayment = async (paymentInfo: TPaymentInfo) => {
+  const transactionId = generateObjectId();
   const {
     total_amount,
     currency,

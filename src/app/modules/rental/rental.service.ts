@@ -63,12 +63,9 @@ const makeAdvancePaymentSuccess = async (transactionId: string) => {
   );
 
   if (result) {
-    await BikeModel.findOneAndUpdate(
-      { _id: result?.bikeId },
-      {
-        isAvailable: false,
-      },
-    );
+    await BikeModel.findByIdAndUpdate(result?.bikeId, {
+      isAvailable: false,
+    });
   }
   return result;
 };
