@@ -10,7 +10,15 @@ import { notFound } from './app/utils/notFound';
 
 const app: Application = express();
 app.use(express.json());
-app.use(cors({ origin: ['http://localhost:5173', 'https://rideflow-fawn.vercel.app'], credentials: true }));
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://rideflow-fawn.vercel.app',
+    ],
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 
 // const test = async (req: Request, res: Response) => {

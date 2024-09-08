@@ -77,14 +77,14 @@ const advancePaymentSuccess = catchAsyncError(async (req, res) => {
   const transactionId = req?.params?.transactionId;
   await RentalServices.makeAdvancePaymentSuccess(transactionId);
   res.redirect(
-    `http://localhost:5173/dashboard/user/my-rentals?booking=confirmed`,
+    `https://rideflow-fawn.vercel.app/dashboard/user/my-rentals?booking=confirmed`,
   );
 });
 
 const advancePaymentFail = catchAsyncError(async (req, res) => {
   const transactionId = req?.params?.transactionId;
   await RentalServices.makeAdvancePaymentFail(transactionId);
-  res.redirect(`http://localhost:5173/advance-payment-failure`);
+  res.redirect(`https://rideflow-fawn.vercel.app/advance-payment-failure`);
 });
 
 const getSingleRental = catchAsyncError(async (req, res) => {
@@ -110,13 +110,15 @@ const paymentSuccess = catchAsyncError(async (req, res) => {
   const transactionId = req?.params?.transactionId;
   const rentalId = req?.params?.rentalId;
   await RentalServices.paymentSuccess(transactionId, rentalId);
-  res.redirect(`http://localhost:5173/payment-success/${transactionId}`);
+  res.redirect(
+    `https://rideflow-fawn.vercel.app/payment-success/${transactionId}`,
+  );
 });
 
 const paymentFail = catchAsyncError(async (req, res) => {
   const transactionId = req?.params?.transactionId;
   await RentalServices.paymentFail(transactionId);
-  res.redirect(`http://localhost:5173/payment-failure`);
+  res.redirect(`https://rideflow-fawn.vercel.app/payment-failure`);
 });
 
 export const RentalControllers = {
