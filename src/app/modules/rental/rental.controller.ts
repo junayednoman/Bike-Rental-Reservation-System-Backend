@@ -35,7 +35,6 @@ const createRental = catchAsyncError(async (req, res) => {
 const returnBike = catchAsyncError(async (req, res) => {
   const id = req?.params?.id;
   const { rentalEndTime } = req.body;
-  console.log('body', req.body);
   const result = await RentalServices.returnBike(id, rentalEndTime);
   successResponse(res, {
     message: 'Bike returned successfully',

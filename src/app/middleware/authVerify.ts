@@ -17,7 +17,10 @@ export const authVerify = (allowedUsers: string[]) => {
       const token = authHeader.split(' ')[1];
 
       // verify token
-      const { email, role } = jwt.verify(token, config.jwt_access_secret as string) as JwtPayload;
+      const { email, role } = jwt.verify(
+        token,
+        config.jwt_access_secret as string,
+      ) as JwtPayload;
 
       // check if user exists with the token credentials
       const isUserExist = await UserModel.findOne({ email, role });

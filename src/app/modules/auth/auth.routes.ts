@@ -32,7 +32,6 @@ userRouter.put(
   AuthController.updateUserProfile,
 );
 
-
 userRouter.get('/', authVerify(['admin']), AuthController.getAllUsers);
 
 userRouter.delete('/:id', authVerify(['admin']), AuthController.deleteUser);
