@@ -18,8 +18,8 @@ const createRentalIntoDb = async (
   decodedInfo: JwtPayload,
   paymentInfo: TPaymentInfo,
 ) => {
-  paymentInfo.success_url = `http://localhost:5000/api/rentals/advance-payment-success`;
-  paymentInfo.fail_url = `http://localhost:5000/api/rentals/advance-payment-fail`;
+  paymentInfo.success_url = `https://bike-rental-reservation-system-backend-teal.vercel.app/api/rentals/advance-payment-success`;
+  paymentInfo.fail_url = `https://bike-rental-reservation-system-backend-teal.vercel.app/api/rentals/advance-payment-fail`;
   const paymentInit = await initiatePayment(paymentInfo);
   if (!paymentInit?.url) {
     throw new AppError(httpStatus.BAD_GATEWAY, 'Payment initiation failed!');
@@ -216,8 +216,8 @@ const makePayment = async (rentalId: string, paymentInfo: TPaymentInfo) => {
       message: `Total cost and advance amount is equal! So, payment is done! 😀`,
     };
   } else {
-    paymentInfo.success_url = `http://localhost:5000/api/rentals/payment-success/${rentalId}`;
-    paymentInfo.fail_url = `http://localhost:5000/api/rentals/payment-fail`;
+    paymentInfo.success_url = `https://bike-rental-reservation-system-backend-teal.vercel.app/api/rentals/payment-success/${rentalId}`;
+    paymentInfo.fail_url = `https://bike-rental-reservation-system-backend-teal.vercel.app/api/rentals/payment-fail`;
     const paymentInit = await initiatePayment(paymentInfo);
     if (!paymentInit?.url) {
       throw new AppError(httpStatus.BAD_GATEWAY, 'Payment initiation failed!');
