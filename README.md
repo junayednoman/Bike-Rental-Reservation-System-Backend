@@ -8,12 +8,14 @@ Welcome to the Bike Rental Reservation System backend! This project provides a s
 - **User-friendly bike exploration and booking**: Easily browse and rent bikes.
 - **Secure JWT-based authentication and authorization**: Robust security for user data.
 - **Scalable and efficient back-end architecture**: Designed for performance and scalability.
+- **Payment Gateway Integration**: Payment gateway integrated with SSLCommerz
 
 ## 🛠️ Technology Stack
 
 - **Programming Language**: TypeScript
 - **Web Framework**: Express.js
 - **ODM & Validation Library**: Zod, Mongoose for MongoDB
+- **Payment Gateway**: SSLCommerz
 - **Authentication & Authorization**: JWT (Json Web Token)
 
 ## 🌐 API Endpoints
